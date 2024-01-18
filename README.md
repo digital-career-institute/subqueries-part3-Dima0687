@@ -20,3 +20,71 @@ Identify applicants who have applied for a job that currently has no opening.
 Find all job openings that require a minimum of 3 to 5 years of experience.
 ## 6. Education Level Analysis:
 Retrieve a list of job titles and the count of applicants who have applied for each job, grouped by education level (e.g., Bachelor's, Master's, PhD).
+
+```SQL
+-- 1.
+SELECT * FROM jobopenings;
+
+-- 2.
+SELECT 
+	apl.applicantid,
+	apl.applicantname,
+	jo.jobid,
+	jo.jobtitle
+FROM applicants apl
+JOIN jobopenings jo ON apl.appliedforjobid = jo.jobid
+GROUP BY apl.applicantid, apl.applicantname, jo.jobid, jo.jobtitle
+ORDER BY apl.applicantname ASC;
+
+-- 3.
+
+SELECT 
+    apl.applicantid,
+    apl.applicantname,
+    apl.experienceyears,
+    apl.education
+FROM 
+    applicants apl
+JOIN 
+    jobopenings jo ON apl.appliedforjobid = jo.jobid
+WHERE 
+    CASE 
+        WHEN POSITION('Master' IN apl.education) > 0 THEN 'Master'
+        WHEN POSITION('PhD' IN apl.education) > 0 THEN 'PhD'
+        WHEN POSITION('Bachelor' IN apl.education) > 0 THEN 'Bachelor'
+    END
+    = ANY(ARRAY['PhD', 'Bachelor', 'Master'])
+    AND apl.experienceyears >= jo.minimumexperience;
+
+-- 4.
+
+SELECT
+    *
+FROM 
+    applicants apl
+LEFT JOIN 
+    jobopenings jo ON apl.appliedforjobid = jo.jobid
+WHERE
+	jo.jobid IS NULL;
+	
+-- 5.
+SELECT
+	*
+FROM 
+	jobopenings jo
+WHERE
+	jo.minimumexperience BETWEEN 3 AND 5;
+	
+-- 6.
+SELECT
+    jo.jobtitle,
+    apl.education,
+    COUNT(apl.applicantid) AS applicant_count
+FROM
+    jobopenings jo
+LEFT JOIN
+    applicants apl ON jo.jobid = apl.appliedforjobid
+GROUP BY
+    jo.jobtitle,
+    apl.education;
+```
